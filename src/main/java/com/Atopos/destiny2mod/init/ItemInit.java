@@ -22,23 +22,23 @@ public class ItemInit {
     public static final RegistryObject<Item> PERFECT_RETROGRADE_AMMO = ITEMS.register("perfect_retrograde_ammo",
             () -> new Item(new Item.Properties()));
 
-    // --- 烈日技能与机灵 ---
+    // --- 技能与机灵 ---
     public static final RegistryObject<Item> SOLAR_GRENADE = ITEMS.register("solar_grenade",
-            () -> new Item(new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
+            () -> new Item(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> GHOST_GENERAL = ITEMS.register("ghost_general",
-            () -> new GhostItem(new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+            () -> new GhostItem(new Item.Properties().stacksTo(1)));
 
-    // --- 异域金装 (核心逻辑判定点) ---
+    // --- 异域金装 (核心) ---
     public static final RegistryObject<Item> SUNFIRE_CHESTPLATE = ITEMS.register("sunfire_chestplate",
             () -> new ArmorItem(ArmorMaterials.NETHERITE, ArmorItem.Type.CHESTPLATE, new Item.Properties().rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> IGNITION_LEGGINGS = ITEMS.register("ignition_leggings",
             () -> new ArmorItem(ArmorMaterials.NETHERITE, ArmorItem.Type.LEGGINGS, new Item.Properties().rarity(Rarity.EPIC)));
 
-    // [新增] 超载头盔 - 技能无CD但连续使用扣血
+    // [新增] 超载头盔
     public static final RegistryObject<Item> OVERLOAD_HELMET = ITEMS.register("overload_helmet",
             () -> new ArmorItem(ArmorMaterials.NETHERITE, ArmorItem.Type.HELMET, new Item.Properties().rarity(Rarity.EPIC)));
 
-    // --- 基础资源 ---
+    // --- 资源 ---
     public static final RegistryObject<Item> GLIMMER = ITEMS.register("glimmer", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> EXOTIC_ENGRAM = ITEMS.register("exotic_engram", () -> new Item(new Item.Properties().rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> STRANGE_COIN = ITEMS.register("strange_coin", () -> new Item(new Item.Properties()));
