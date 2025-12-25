@@ -2,45 +2,66 @@ package com.Atopos.destiny2mod.network.packet;
 
 import com.Atopos.destiny2mod.entity.custom.SolarSnapProjectile;
 import com.Atopos.destiny2mod.init.ItemInit;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class PacketSolarSnap {
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            ServerPlayer player = context.get().getSender();
+    public PacketSolarSnap() {}
+
+    // 修复编译错误：添加编解码方法
+    public static void encode(PacketSolarSnap msg, FriendlyByteBuf buf) {}
+    public static PacketSolarSnap decode(FriendlyByteBuf buf) { return new PacketSolarSnap(); }
+
+    public static void handle(PacketSolarSnap msg, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
             if (player == null) return;
 
-            // 1. 检查是否穿着爆燃护腿
-            boolean hasLeggings = player.getItemBySlot(EquipmentSlot.LEGS).is(ItemInit.IGNITION_LEGGINGS.get());
+            CompoundTag nbt = player.getPersistentData();
+            boolean isOverloaded = nbt.getBoolean("OverloadActive");
 
-            // 2. 确定发射数量：金装 10 发，基础 3 发
+            // --- 1. 超载触发窗口逻辑 ---
+            // 如果没在超载状态且带着头盔，使用技能开启10秒杀敌窗口
+            if (!isOverloaded && player.getItemBySlot(EquipmentSlot.HEAD).is(ItemInit.OVERLOAD_HELMET.get())) {
+                if (nbt.getInt("OverloadKillWindow") <= 0) {
+                    nbt.putInt("OverloadKillWindow", 200); // 10秒 = 200 ticks
+                    nbt.putInt("OverloadKillCount", 0);    // 重置窗口内击杀数
+                }
+            }
+
+            // --- 2. 基础技能发射逻辑 ---
+            boolean hasLeggings = player.getItemBySlot(EquipmentSlot.LEGS).is(ItemInit.IGNITION_LEGGINGS.get());
             int count = hasLeggings ? 10 : 3;
-            float spread = hasLeggings ? 40f : 20f; // 散布角度
-            float startAngle = -spread / 2;
+            float spread = hasLeggings ? 45f : 20f;
+            float startAngle = -spread / 2f;
             float step = spread / (count - 1);
 
-            long snapId = player.level().getGameTime(); // 标记这一波响指的 ID
-
-            // [关键] 必须通过循环发射多个实体
             for (int i = 0; i < count; i++) {
                 SolarSnapProjectile projectile = new SolarSnapProjectile(player.level(), player);
-                projectile.setPos(player.getX(), player.getEyeY() - 0.2, player.getZ());
-
-                // 存入强化标记和波次 ID
-                projectile.getPersistentData().putLong("SnapID", snapId);
-                projectile.getPersistentData().putBoolean("Enhanced", hasLeggings);
-
-                // 计算每个火球的偏移角度
-                projectile.shootFromRotation(player, player.getXRot(), player.getYRot() + startAngle + (i * step), 0.0F, 1.5F, 1.0F);
+                projectile.setPos(player.getX(), player.getEyeY() - 0.15, player.getZ());
+                projectile.shootFromRotation(player, player.getXRot(), player.getYRot() + startAngle + (i * step), 0.0F, 1.6F, 0.8F);
                 player.level().addFreshEntity(projectile);
             }
 
-            // 设置机灵（近战）的冷却
-            player.getCooldowns().addCooldown(ItemInit.GHOST_GENERAL.get(), 100);
+            // --- 3. 超载惩罚与冷却逻辑 ---
+            if (isOverloaded) {
+                // 超载状态：无CD，但累加使用计数
+                int usage = nbt.getInt("OverloadUsage") + 1;
+                nbt.putInt("OverloadUsage", usage);
+                if (usage >= 5) {
+                    player.hurt(player.damageSources().magic(), 4.0F); // 扣2颗心
+                    nbt.putInt("OverloadUsage", 0);
+                }
+            } else {
+                // 普通状态：正常进入冷却
+                player.getCooldowns().addCooldown(ItemInit.GHOST_GENERAL.get(), 100);
+            }
         });
-        context.get().setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }

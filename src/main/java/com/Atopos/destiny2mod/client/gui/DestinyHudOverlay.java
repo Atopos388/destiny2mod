@@ -8,17 +8,19 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Destiny2Mod.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+/**
+ * Destiny HUD 覆盖层
+ * 负责渲染手雷和近战技能的冷却图标
+ */
+@Mod.EventBusSubscriber(modid = Destiny2Mod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DestinyHudOverlay {
 
-    // [优化] 使用两个参数的构造函数，并确保路径字符串正确以减少警告
     private static final ResourceLocation GRENADE_ICON = new ResourceLocation(Destiny2Mod.MODID, "textures/item/solar_grenade.png");
     private static final ResourceLocation MELEE_ICON = new ResourceLocation("minecraft", "textures/item/fire_charge.png");
 
@@ -40,6 +42,7 @@ public class DestinyHudOverlay {
         int iconSize = 24;
         int spacing = 8;
 
+        // 渲染手雷技能框
         renderSkillBox(guiGraphics, minecraft, player,
                 startX, y, iconSize,
                 GRENADE_ICON,
@@ -47,6 +50,7 @@ public class DestinyHudOverlay {
                 200,
                 partialTick);
 
+        // 渲染近战技能框
         int meleeX = startX + iconSize + spacing;
         renderSkillBox(guiGraphics, minecraft, player,
                 meleeX, y, iconSize,
