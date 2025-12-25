@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+issueTrackerURL=""
+
+[[mods]]
+modId="destiny2mod"
+version="0.0.1"
+displayName="Destiny 2 Mod"
+displayURL="https://example.com"
+logoFile="logo.png"
+credits="Bungie"
+authors="YourName"
+description='''
+Destiny 2 Mod for Minecraft.
+'''
+
+[[dependencies.destiny2mod]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.destiny2mod]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
