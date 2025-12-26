@@ -23,4 +23,13 @@ public class KeyInit {
             GLFW.GLFW_KEY_C,
             CATEGORY
     );
+
+    // [新增] 诊断按键
+    public static final KeyMapping DIAG_KEY = new KeyMapping(
+            "key.destiny2mod.diagnostic_tool",
+            KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F10,
+            CATEGORY
+    );
 }

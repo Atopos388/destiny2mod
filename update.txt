@@ -1,0 +1,147 @@
+package com.Atopos.destiny2mod.client.gui;
+
+import com.Atopos.destiny2mod.Destiny2Mod;
+import com.Atopos.destiny2mod.init.ItemInit;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 高级 HUD 渲染类
+ * 模仿《命运2》视觉风格
+ */
+@Mod.EventBusSubscriber(modid = Destiny2Mod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public class DestinyHudOverlay {
+
+    // @Anchor: "destiny_hud_v2"
+    private static final ResourceLocation GRENADE_ICON = new ResourceLocation(Destiny2Mod.MODID, "textures/item/solar_grenade.png");
+    private static final ResourceLocation MELEE_ICON = new ResourceLocation("minecraft", "textures/item/fire_charge.png");
+
+    @SubscribeEvent
+    public static void registerOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "destiny_hud_main", HUD_RENDERER);
+    }
+
+    public static final IGuiOverlay HUD_RENDERER = (gui, guiGraphics, partialTick, screenWidth, screenHeight) -> {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options.hideGui || mc.player == null || mc.player.isSpectator()) return;
+
+        Player player = mc.player;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+
+        // 1. 渲染左侧动态 Buff 列表
+        renderDynamicBuffs(guiGraphics, mc, player, 15, screenHeight / 2 - 20);
+
+        // 2. 渲染左下角技能集群 (手雷/近战)
+        int baseY = screenHeight - 50;
+        int baseX = 20;
+
+        // 子职业主题条 (烈日橙色)
+        guiGraphics.fill(baseX - 2, baseY - 5, baseX + 60, baseY - 3, 0xFFFF9800);
+
+        // 手雷 (G)
+        renderD2Ability(guiGraphics, mc, player, baseX, baseY, GRENADE_ICON, ItemInit.SOLAR_GRENADE.get(), 200, partialTick, "G");
+        
+        // 近战 (C)
+        renderD2Ability(guiGraphics, mc, player, baseX + 32, baseY, MELEE_ICON, ItemInit.GHOST_GENERAL.get(), 100, partialTick, "C");
+
+        RenderSystem.disableBlend();
+    };
+
+    /**
+     * 渲染带进度条的 Buff
+     */
+    private static void renderDynamicBuffs(GuiGraphics graphics, Minecraft mc, Player player, int x, int y) {
+        // @Anchor: "renderDynamicBuffs"
+        CompoundTag nbt = player.getPersistentData();
+        int spacing = 0;
+
+        // 超载 Buff 判定
+        if (nbt.getBoolean("OverloadActive")) {
+            int timer = nbt.getInt("OverloadBuffTimer");
+            float progress = timer / 200.0f; // 10秒总长
+            drawBuffItem(graphics, mc, x, y + spacing, "§d§l超载", String.format("%.1fs", timer / 20.0f), progress, 0xFFBB00FF);
+            spacing += 18;
+        } 
+        
+        // 准备窗口判定
+        if (nbt.getInt("OverloadKillWindow") > 0 && !nbt.getBoolean("OverloadActive")) {
+            int count = nbt.getInt("OverloadKillCount");
+            int timeLeft = nbt.getInt("OverloadKillWindow");
+            float progress = timeLeft / 200.0f;
+            drawBuffItem(graphics, mc, x, y + spacing, "§e§l准备超载", count + "/5", progress, 0xFFFFEB3B);
+            spacing += 18;
+        }
+    }
+
+    private static void drawBuffItem(GuiGraphics graphics, Minecraft mc, int x, int y, String title, String val, float progress, int color) {
+        int width = 80;
+        // 背景
+        graphics.fill(x, y, x + width, y + 14, 0x70000000);
+        // 标题
+        graphics.drawString(mc.font, title, x + 4, y + 3, 0xFFFFFF, true);
+        // 数值
+        int valW = mc.font.width(val);
+        graphics.drawString(mc.font, val, x + width - valW - 4, y + 3, 0xFFFFFF, true);
+        // 底部进度条
+        graphics.fill(x, y + 13, x + (int)(width * progress), y + 14, color);
+    }
+
+    /**
+     * 命运2风格技能图标
+     */
+    private static void renderD2Ability(GuiGraphics graphics, Minecraft mc, Player player, int x, int y, ResourceLocation icon, net.minecraft.world.item.Item item, int maxCD, float pt, String key) {
+        // @Anchor: "renderD2Ability"
+        float cd = player.getCooldowns().getCooldownPercent(item, pt);
+        int size = 26;
+
+        // 1. 图标框底色
+        graphics.fill(x - 1, y - 1, x + size + 1, y + size + 1, 0x80000000);
+
+        // 2. 渲染图标
+        RenderSystem.setShaderTexture(0, icon);
+        if (cd > 0) {
+            RenderSystem.setShaderColor(0.3f, 0.3f, 0.3f, 1.0f);
+        } else {
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+            // 就绪时的微光特效
+            int glowAlpha = (int)(Math.sin(player.tickCount * 0.1) * 20 + 40);
+            graphics.fill(x, y, x + size, y + size, glowAlpha << 24 | 0x00FF9800);
+        }
+        graphics.blit(icon, x + 3, y + 3, 0, 0, 20, 20, 20, 20);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        // 3. 冷却阴影与文字
+        if (cd > 0) {
+            int coolHeight = (int) (size * cd);
+            graphics.fill(x, y + (size - coolHeight), x + size, y + size, 0xB0000000);
+            
+            String sec = String.valueOf((int)(maxCD * cd / 20) + 1);
+            graphics.drawCenteredString(mc.font, sec, x + size / 2, y + size / 2 - 4, 0xFFFFFF);
+        } else {
+            // 就绪边框
+            graphics.renderOutline(x, y, size, size, 0xFFFFFFFF);
+        }
+
+        // 4. 按键提示
+        graphics.pose().pushPose();
+        graphics.pose().scale(0.6f, 0.6f, 0.6f);
+        graphics.drawString(mc.font, "[" + key + "]", (int)((x + 2) / 0.6f), (int)((y + size - 6) / 0.6f), 0xAAAAAA, false);
+        graphics.pose().popPose();
+    }
+}

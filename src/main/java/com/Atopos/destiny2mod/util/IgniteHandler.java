@@ -7,6 +7,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -16,27 +17,33 @@ public class IgniteHandler {
     public static final String STACK_KEY = "destiny2mod.ignite_stacks";
     public static final String TIMER_KEY = "destiny2mod.ignite_timer";
     public static final String FUSE_KEY = "destiny2mod.ignite_fuse";
-    public static final int MAX_TIMER = 200;
 
+    /**
+     * 应用点燃层数 (玩家免疫)
+     */
     public static void apply(Entity target, int amount, LivingEntity source) {
-        if (!(target instanceof LivingEntity living)) return;
+        if (!(target instanceof LivingEntity living) || target instanceof Player) return;
+
         CompoundTag data = living.getPersistentData();
-        if (data.getInt(FUSE_KEY) > 0) return;
+        if (data.getInt(FUSE_KEY) > 0) return; // 已在引爆中
 
         int current = data.getInt(STACK_KEY);
         int next = current + amount;
 
-        if (next >= 10) {
-            data.putInt(FUSE_KEY, 20);
+        if (next >= 10) { // 核心规则：10层产生爆炸
+            data.putInt(FUSE_KEY, 20); // 1秒引信
             data.putInt(STACK_KEY, 0);
-            data.putInt(TIMER_KEY, 0);
-            living.level().playSound(null, living.getX(), living.getY(), living.getZ(), SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.2F, 0.6F);
+            living.level().playSound(null, living.getX(), living.getY(), living.getZ(),
+                    SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.2F, 0.6F);
         } else {
             data.putInt(STACK_KEY, next);
-            data.putInt(TIMER_KEY, MAX_TIMER);
+            data.putInt(TIMER_KEY, 100); // 5秒衰减
         }
     }
 
+    /**
+     * 触发爆炸：12点伤害 + 传递5层点燃
+     */
     public static void triggerIgniteExplosion(LivingEntity target, LivingEntity source) {
         Level level = target.level();
         double x = target.getX(), y = target.getY() + 1.0, z = target.getZ();
@@ -49,29 +56,31 @@ public class IgniteHandler {
 
         AABB area = new AABB(x-5, y-3, z-5, x+5, y+3, z+5);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area);
+
         for (LivingEntity e : targets) {
-            if (e == source) continue;
+            if (e == source || e instanceof Player) continue; // 不伤玩家
+
             e.hurt(level.damageSources().explosion(null, source), 12.0F);
-            // 爆炸向周围传递 3 层灼烧
-            if (e != target) apply(e, 3, source);
+            DamageIndicatorUtil.spawnIndicator(e, 12.0F);
+
+            // 核心规则：向周围实体传递 5 层点燃
+            if (e != target) {
+                apply(e, 5, source);
+            }
         }
     }
 
-    public static void spreadScorchOnDeath(LivingEntity victim) {
-        Level level = victim.level();
-        if (level instanceof ServerLevel sl) {
-            sl.sendParticles(ParticleTypes.LAVA, victim.getX(), victim.getY() + 1, victim.getZ(), 8, 0.4, 0.4, 0.4, 0.1);
-        }
-        AABB spreadArea = victim.getBoundingBox().inflate(3.5);
-        List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class, spreadArea);
-        for (LivingEntity e : nearby) {
-            if (e != victim) apply(e, 2, null);
-        }
-    }
-
-    public static void spawnGatheringParticles(LivingEntity entity) {
+    /**
+     * 生成点燃粒子的 Tick 逻辑
+     */
+    public static void spawnIgniteParticles(LivingEntity entity) {
         if (entity.level() instanceof ServerLevel sl) {
-            sl.sendParticles(ParticleTypes.FLAME, entity.getX(), entity.getY() + 1, entity.getZ(), 5, 0.3, 0.5, 0.3, 0.05);
+            CompoundTag data = entity.getPersistentData();
+            if (data.getInt(FUSE_KEY) > 0) {
+                sl.sendParticles(ParticleTypes.LARGE_SMOKE, entity.getX(), entity.getY()+1, entity.getZ(), 2, 0.2, 0.2, 0.2, 0.05);
+            } else if (data.getInt(STACK_KEY) > 0 && entity.tickCount % 10 == 0) {
+                sl.sendParticles(ParticleTypes.FLAME, entity.getX(), entity.getY()+0.5, entity.getZ(), 1, 0.2, 0.2, 0.2, 0.01);
+            }
         }
     }
 }
