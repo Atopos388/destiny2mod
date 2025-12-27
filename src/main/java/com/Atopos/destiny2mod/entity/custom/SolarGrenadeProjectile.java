@@ -11,7 +11,7 @@ import net.minecraft.world.phys.HitResult;
 
 /**
  * 烈日手雷投掷实体
- * 命中后在地面生成一个 SolarFlareEntity (持续伤害场)
+ * 修复：解决了调用 SolarFlareEntity 构造器时的类型不匹配错误
  */
 public class SolarGrenadeProjectile extends ThrowableItemProjectile {
 
@@ -32,10 +32,12 @@ public class SolarGrenadeProjectile extends ThrowableItemProjectile {
     protected void onHit(HitResult result) {
         super.onHit(result);
         if (!this.level().isClientSide) {
-            // 命中后生成耀斑区域实体
-            SolarFlareEntity flare = new SolarFlareEntity(this.level(), this.getOwner());
-            flare.setPos(this.getX(), this.getY(), this.getZ());
-            this.level().addFreshEntity(flare);
+            // [修复] 必须确保 owner 是 LivingEntity 类型以匹配构造器
+            if (this.getOwner() instanceof LivingEntity livingOwner) {
+                SolarFlareEntity flare = new SolarFlareEntity(this.level(), livingOwner);
+                flare.setPos(this.getX(), this.getY(), this.getZ());
+                this.level().addFreshEntity(flare);
+            }
 
             this.discard();
         }

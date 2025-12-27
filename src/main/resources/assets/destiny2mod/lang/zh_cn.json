@@ -1,19 +1,22 @@
 {
   "item.destiny2mod.glimmer": "微光",
   "item.destiny2mod.exotic_engram": "异域记忆水晶",
+  "item.destiny2mod.strange_coin": "奇怪的硬币",
   "item.destiny2mod.perfect_retrograde": "完美逆行",
   "item.destiny2mod.perfect_retrograde_ammo": "虚空弹丸",
   "item.destiny2mod.ghost_general": "通用机灵外壳",
   "item.destiny2mod.solar_grenade": "烈日手雷",
+
   "item.destiny2mod.sunfire_chestplate": "炎阳护甲",
   "item.destiny2mod.ignition_leggings": "爆燃护腿",
+  "item.destiny2mod.overload_helmet": "超载头盔",
 
   "entity.destiny2mod.perfect_retrograde_projectile": "虚空弹丸",
   "entity.destiny2mod.solar_grenade_projectile": "烈日手雷",
   "entity.destiny2mod.solar_flare_entity": "烈日耀斑",
   "entity.destiny2mod.solar_snap_projectile": "烈日响指",
 
-  "creativetab.destiny_tab": "命运2",
+  "creativetab.destiny_tab": "命运2：光能编年史",
 
   "gui.destiny2mod.ghost_title": "机灵系统",
   "gui.destiny2mod.button.nav": "术士",
@@ -23,5 +26,6 @@
 
   "key.destiny2mod.category": "命运2模组",
   "key.destiny2mod.grenade_ability": "投掷手雷技能",
-  "key.destiny2mod.melee_ability": "近战技能"
+  "key.destiny2mod.melee_ability": "近战技能",
+  "key.destiny2mod.diagnostic_tool": "模组诊断终端"
 }
