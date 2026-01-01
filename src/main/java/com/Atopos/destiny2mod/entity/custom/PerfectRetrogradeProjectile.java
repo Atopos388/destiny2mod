@@ -93,6 +93,10 @@ public class PerfectRetrogradeProjectile extends ThrowableItemProjectile {
         if (this.level().isClientSide) return;
 
         Entity target = result.getEntity();
+        
+        // 防止命中发射者自己
+        if (target == this.getOwner()) return;
+        
         List<Perk> perks = loadPerks();
 
         // 1. 计算伤害倍率 (基于词条)

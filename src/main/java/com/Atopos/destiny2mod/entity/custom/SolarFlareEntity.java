@@ -76,7 +76,7 @@ public class SolarFlareEntity extends Entity {
             // 检测炎阳护甲增强
             boolean isEnhanced = owner != null && owner.getItemBySlot(EquipmentSlot.CHEST).is(ItemInit.SUNFIRE_CHESTPLATE.get());
 
-            float damageAmount = isEnhanced ? 4.0F : 2.0F; // 增强后翻倍至2心
+            float damageAmount = isEnhanced ? 8.0F : 4.0F; // 基础2心，增强后4心
             int scorchStacks = isEnhanced ? 4 : 2;        // 增强后每秒4层点燃
 
             AABB area = this.getBoundingBox().inflate(4.0, 1.5, 4.0);

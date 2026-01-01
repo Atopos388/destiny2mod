@@ -63,8 +63,8 @@ public class PacketThrowGrenade {
                 // 同步数据到客户端（用于 UI 潜在的计数显示或同步）
                 PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncOverloadPacket(nbt));
             } else {
-                // 正常模式：10秒冷却 (200 ticks)
-                player.getCooldowns().addCooldown(ItemInit.SOLAR_GRENADE.get(), 200);
+                // 正常模式：40秒冷却 (800 ticks)
+                player.getCooldowns().addCooldown(ItemInit.SOLAR_GRENADE.get(), 800);
             }
         });
         context.setPacketHandled(true);

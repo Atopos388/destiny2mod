@@ -43,7 +43,8 @@ public class PacketSolarSnap {
                 p.setEnhanced(hasLeggings);
                 p.setBatchId(bid);
                 p.setPos(player.getX(), player.getEyeY() - 0.15, player.getZ());
-                p.shootFromRotation(player, player.getXRot(), player.getYRot() + (i*10 - (count*5)), 0.0F, 1.6F, 1.0F);
+                // 修复：减小散射范围，由原来的 (i*10 - count*5) 改为 (i*4 - count*2)
+                p.shootFromRotation(player, player.getXRot(), player.getYRot() + (i*4 - (count*2)), 0.0F, 1.6F, 1.0F);
                 player.level().addFreshEntity(p);
             }
 
@@ -53,17 +54,15 @@ public class PacketSolarSnap {
                 player.getCooldowns().addCooldown(ItemInit.GHOST_GENERAL.get(), 16);
 
                 int use = nbt.getInt("OverloadUsage") + 1;
+                nbt.putInt("OverloadUsage", use);
                 if (use >= 5) {
                     player.invulnerableTime = 0;
                     player.hurt(player.damageSources().magic(), 4.0F); // 扣除2颗心
-                    nbt.putInt("OverloadUsage", 0);
-                } else {
-                    nbt.putInt("OverloadUsage", use);
                 }
                 PacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new S2CSyncOverloadPacket(nbt));
             } else {
-                // 正常模式冷却：5秒
-                player.getCooldowns().addCooldown(ItemInit.GHOST_GENERAL.get(), 100);
+                // 正常模式冷却：25秒 (500 ticks)
+                player.getCooldowns().addCooldown(ItemInit.GHOST_GENERAL.get(), 500);
             }
         });
         context.setPacketHandled(true);

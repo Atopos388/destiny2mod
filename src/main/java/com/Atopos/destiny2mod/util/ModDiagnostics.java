@@ -73,11 +73,20 @@ public class ModDiagnostics {
         DiagnosticCategory skills = new DiagnosticCategory("技能系统 (Skills)");
         checkItem(skills, ItemInit.GHOST_GENERAL, "近战(机灵)注册");
         checkItem(skills, ItemInit.SOLAR_GRENADE, "手雷项目注册");
+        checkItem(skills, ItemInit.WELL_OF_RADIANCE, "强能裂隙注册"); // [新增]
         if (player != null) {
             float meleeCD = player.getCooldowns().getCooldownPercent(ItemInit.GHOST_GENERAL.get(), 0);
             float grenadeCD = player.getCooldowns().getCooldownPercent(ItemInit.SOLAR_GRENADE.get(), 0);
+            float wellCD = player.getCooldowns().getCooldownPercent(ItemInit.WELL_OF_RADIANCE.get(), 0); // [新增]
+            
             skills.entries.add(new DiagnosticEntry("机灵状态", meleeCD == 0, meleeCD > 0 ? "冷却中" : "可释放"));
             skills.entries.add(new DiagnosticEntry("手雷状态", grenadeCD == 0, grenadeCD > 0 ? "冷却中" : "可释放"));
+            skills.entries.add(new DiagnosticEntry("裂隙状态", wellCD == 0, wellCD > 0 ? "冷却中" : "可释放")); // [新增]
+            
+            // 实体计数检测 (可选)
+            int wells = player.level().getEntitiesOfClass(com.Atopos.destiny2mod.entity.custom.WellOfRadianceEntity.class, 
+                player.getBoundingBox().inflate(50)).size();
+            skills.entries.add(new DiagnosticEntry("裂隙实体数", true, "范围内: " + wells));
         }
         CATEGORIES.put("SKILLS", skills);
 

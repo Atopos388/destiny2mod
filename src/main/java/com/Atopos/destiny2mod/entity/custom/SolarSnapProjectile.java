@@ -39,6 +39,9 @@ public class SolarSnapProjectile extends ThrowableItemProjectile {
             Entity ownerEntity = this.getOwner();
 
             if (ownerEntity instanceof LivingEntity owner && target instanceof LivingEntity livingTarget) {
+                // 防止投射物命中发射者自己（避免自杀）
+                if (target == owner) return;
+
                 livingTarget.invulnerableTime = 0; // 核心：支持多重命中
 
                 // 点燃规则：响指火球 3 层

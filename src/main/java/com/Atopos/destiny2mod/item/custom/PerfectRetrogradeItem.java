@@ -52,7 +52,7 @@ public class PerfectRetrogradeItem extends DestinyWeaponItem implements GeoItem 
         if (tag.getInt("BurstShotsLeft") <= 0) {
             tag.putInt("BurstShotsLeft", 3);
             tag.putInt("BurstTimer", 0);
-            float delayMult = DestinyWeaponItem.getTotalFireDelayMultiplier(stack);
+            float delayMult = DestinyWeaponItem.getTotalFireDelayMultiplier(stack, player);
             player.getCooldowns().addCooldown(this, Math.max(5, Math.round(25 * delayMult)));
         }
     }
@@ -67,7 +67,7 @@ public class PerfectRetrogradeItem extends DestinyWeaponItem implements GeoItem 
             if (timer <= 0) {
                 fireProjectile(level, player, stack);
                 tag.putInt("BurstShotsLeft", shotsLeft - 1);
-                float delayMult = DestinyWeaponItem.getTotalFireDelayMultiplier(stack);
+                float delayMult = DestinyWeaponItem.getTotalFireDelayMultiplier(stack, player);
                 tag.putInt("BurstTimer", Math.max(1, Math.round(4 * delayMult)));
             } else {
                 tag.putInt("BurstTimer", timer - 1);

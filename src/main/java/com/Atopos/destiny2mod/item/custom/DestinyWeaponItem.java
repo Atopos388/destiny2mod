@@ -108,11 +108,27 @@ public class DestinyWeaponItem extends Item {
         return mult;
     }
 
-    public static float getTotalFireDelayMultiplier(ItemStack stack) {
+    public static float getTotalFireDelayMultiplier(ItemStack stack, @Nullable net.minecraft.world.entity.LivingEntity entity) {
         float mult = 1.0f;
         List<Perk> perks = getPerks(stack);
         for (Perk p : perks) mult *= p.getFireDelayMultiplier();
+        
+        // 检查实体是否有挖掘速度提升效果（急迫），如果有，则视为在强能裂隙中，减少开火冷却
+        if (entity != null && entity.hasEffect(net.minecraft.world.effect.MobEffects.DIG_SPEED)) {
+            // 急迫 II 提供了 20% 的挖掘速度提升 (每级 0.2)
+            // 这里我们将其转换为开火冷却减少，例如减少 30% 的冷却时间 (变为原来的 0.7)
+            mult *= 0.7f;
+        }
+        
         return mult;
+    }
+
+    /**
+     * @deprecated 使用带有 entity 参数的版本 {@link #getTotalFireDelayMultiplier(ItemStack, net.minecraft.world.entity.LivingEntity)} 以支持强能裂隙增益
+     */
+    @Deprecated
+    public static float getTotalFireDelayMultiplier(ItemStack stack) {
+        return getTotalFireDelayMultiplier(stack, null);
     }
 
     private static List<Perk> getPerks(ItemStack stack) {
